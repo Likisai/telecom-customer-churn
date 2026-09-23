@@ -1,9 +1,11 @@
 # ⚡ TelcoPulse AI: Telecom Customer Churn & Retention Intelligence Suite
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://streamlit.io/)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://telecomcustomers.streamlit.app/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Scikit-Learn](https://img.shields.io/badge/scikit--learn-1.3+-orange.svg)](https://scikit-learn.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> 🚀 **Live Interactive Demo:** [https://telecomcustomers.streamlit.app/](https://telecomcustomers.streamlit.app/)
 
 **TelcoPulse AI** is an enterprise-grade AI decision support system designed for telecom customer retention teams. Going beyond basic churn probability predictions, TelcoPulse provides **real-time local risk explainability**, **prescriptive action playbooks**, **interactive "What-If" contract simulations**, and **cohort-level batch prioritization**.
 
