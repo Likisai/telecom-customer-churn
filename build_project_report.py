@@ -643,18 +643,20 @@ def generate_report():
     # 14. USER INTERFACE / APPLICATION SCREENSHOTS
     # ==========================================
     add_styled_heading(doc, "14. User Interface / Application Screenshots", level=1)
-    add_body_p(doc, "The TelcoPulse AI production web application includes five dedicated operational modules:")
+    add_body_p(doc, "The TelcoPulse AI production web application (deployed live at https://telecomcustomers.streamlit.app/) includes six dedicated operational modules:")
     
     screens = [
         ("01_single_customer_diagnosis.png", "Figure 4: Single Customer Risk Diagnosis & Speedometer Gauge", 
          "Features an interactive risk speedometer (Safe <30%, Moderate 30-60%, Critical >60%), annual financial exposure calculation ($/year), local log-odds driver attribution waterfall, and AI-recommended prescriptive retention playbooks."),
-        ("02_what_if_sandbox.png", "Figure 5: What-If Retention Strategy Simulator", 
+        ("10_genai_copilot_ui.png", "Figure 5: ✨ GenAI Customer Retention Copilot Interface", 
+         "Features prompt orchestration, multi-angle stochastic reasoning, Creativity/Temperature slider (0.2–1.0), and 4 generated retention assets: personalized win-back emails, frontline agent call scripts, concession hierarchy, and CRM JSON payload."),
+        ("02_what_if_sandbox.png", "Figure 6: What-If Retention Strategy Simulator", 
          "Enables customer service agents to test contract extensions, technical support bundles, and billing discounts to simulate risk reduction in real time before pitching counter-offers."),
-        ("03_batch_scoring_queue.png", "Figure 6: Batch Cohort Scoring & Prioritized Action Queue", 
+        ("03_batch_scoring_queue.png", "Figure 7: Batch Cohort Scoring & Prioritized Action Queue", 
          "Scores entire subscriber rosters (.csv), ranks accounts by expected annual financial loss, and generates downloadable prioritized campaign lists for targeted marketing outreach."),
-        ("04_executive_cohort_insights.png", "Figure 7: Executive Cohort Analytics & Macro EDA", 
+        ("04_executive_cohort_insights.png", "Figure 8: Executive Cohort Analytics & Macro EDA", 
          "Presents macro-level retention insights across contract types, payment methods, monthly charges distribution, and tech support adoption."),
-        ("05_model_diagnostics.png", "Figure 8: Model Transparency & Global Feature Importance", 
+        ("05_model_diagnostics.png", "Figure 9: Model Transparency & Global Feature Importance", 
          "Provides complete transparency into pipeline architecture, preprocessing parameters, and global beta coefficients.")
     ]
     

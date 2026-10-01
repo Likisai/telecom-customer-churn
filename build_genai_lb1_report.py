@@ -408,19 +408,21 @@ def generate_genai_lb1_report():
     
     impl_specs = [
         ("Programming Language", "Python 3.10+ (Backend logic, data processing, prompt engineering)"),
-        ("Frontend & Web UI", "Streamlit 1.30+ (Reactive state management, interactive multi-tab layout)"),
-        ("Generative AI Engine", "Google Gemini API / Contextual Large Language Model Architecture"),
+        ("Frontend & Web UI", "Streamlit 1.30+ (Glassmorphism dark UI, reactive state management, interactive multi-tab layout)"),
+        ("Generative AI Engine", "Google Gemini Cloud API (gemini-1.5-flash) & Stochastic Multi-Angle Contextual Engine"),
+        ("Creativity & Temperature", "Stochastic temperature sampling (0.2–1.0) with non-deterministic narrative multi-angle reasoning"),
         ("Predictive ML Engine", "Scikit-Learn 1.3+ (Logistic Regression, StandardScaler, OneHotEncoder)"),
         ("Data Handling & Visuals", "Pandas, NumPy, Plotly Express & Graph Objects, Matplotlib"),
-        ("Deployment Platform", "Streamlit Community Cloud (Live Continuous Deployment linked to GitHub)")
+        ("Live Cloud Deployment", "Streamlit Community Cloud (https://telecomcustomers.streamlit.app/)"),
+        ("Source Code Repository", "GitHub (https://github.com/Likisai/telecom-customer-churn.git)")
     ]
     tbl_impl = doc.add_table(rows=len(impl_specs)+1, cols=2)
     style_table(tbl_impl, [2.2, 4.5], ["Technical Component", "Framework / Technology Selected"], impl_specs)
 
-    add_styled_heading(doc, "7.1 Structured Prompt Engineering Implementation", level=2)
-    add_body_p(doc, "The system utilizes a structured few-shot system prompt that enforces strict business rules, tone calibration, and JSON schema formatting:")
+    add_styled_heading(doc, "7.1 Structured Prompt Engineering & Temperature Control", level=2)
+    add_body_p(doc, "The system utilizes a structured few-shot system prompt with temperature-controlled stochastic sampling (0.2 to 1.0) that enforces strict business rules, tone calibration, and JSON schema formatting:")
     
-    prompt_code_sample = """# Structured System Prompt Template for Retention Copilot
+    prompt_code_sample = """# Structured System Prompt Template with Temperature Control
 SYSTEM_PROMPT = \"\"\"
 You are an expert Telecom Retention Strategist & Copywriter. Your mission is to 
 convert high-churn risk subscribers into long-term loyal customers through 
@@ -435,6 +437,7 @@ USER INPUT CONTEXT:
 - Campaign Objective: {campaign_objective}
 - Persona Tone: {persona_tone}
 - Target Channel: {communication_channel}
+- AI Creativity / Temperature: {temperature} (Range: 0.2 - 1.0)
 
 TASK REQUIREMENTS:
 1. CUSTOMER COMMUNICATION: Draft an empathetic, high-converting message resolving their specific pain points.
@@ -444,27 +447,27 @@ TASK REQUIREMENTS:
 \"\"\""""
     add_code_block(doc, prompt_code_sample)
 
-    add_styled_heading(doc, "7.2 GenAI Execution & Response Parsing Function", level=2)
-    gen_func_sample = """# GenAI Retention Asset Generation & Dispatch Function
-def generate_retention_campaign(customer_profile, campaign_config):
-    # Calculate mathematically optimized concession parameters
-    discount_rate = 0.20 # 20% loyalty incentive
-    discount_val = round(customer_profile['monthly_charges'] * discount_rate, 2)
-    new_mrr = round(customer_profile['monthly_charges'] - discount_val, 2)
+    add_styled_heading(doc, "7.2 Stochastic Multi-Angle Reasoning & Execution Function", level=2)
+    gen_func_sample = """# Dynamic Stochastic GenAI Generation & Dispatch Function
+def generate_dynamic_retention_campaign(c_name, c_risk_tier, c_tenure, c_mcharges, 
+                                        c_drivers, c_goal, c_tone, c_channel, 
+                                        temperature=0.85, api_key=None):
+    # 1. Stochastic Narrative Framing Sampling (Milestone, Proactive Audit, VIP, Friction-Removal)
+    chosen_hook = random.choice(narrative_hooks)
     
-    # Assemble prompt with parameterized context
-    prompt = SYSTEM_PROMPT.format(
-        customer_name=customer_profile['name'],
-        risk_tier=customer_profile['risk_tier'],
-        monthly_charges=customer_profile['monthly_charges'],
-        discount_amount=discount_val,
-        new_bill=new_mrr,
-        ...
-    )
+    # 2. Dynamic Concession Calculation with Temperature Fluctuation
+    base_disc = 0.25 if "Emergency" in c_goal else 0.20
+    final_disc_rate = max(0.10, min(0.35, base_disc + random.choice([-0.02, 0.0, 0.02])))
+    discount_val = round(c_mcharges * final_disc_rate, 2)
+    new_bill = round(c_mcharges - discount_val, 2)
     
-    # Execute LLM Inference & Return Multi-Channel Tabular Assets
-    response_payload = execute_llm_inference(prompt)
-    return response_payload"""
+    # 3. Live Google Gemini Cloud API Call (or High-Precision Local Synthesis)
+    if api_key:
+        response = call_google_gemini_api(prompt, temperature=temperature)
+        return response
+    
+    # 4. Assemble Multi-Channel Assets (Email, Agent Script, Concessions, CRM JSON)
+    return assemble_retention_payload(...)"""
     add_code_block(doc, gen_func_sample)
 
     doc.add_page_break()
@@ -473,11 +476,11 @@ def generate_retention_campaign(customer_profile, campaign_config):
     # 8. USER INTERFACE / APPLICATION SCREENSHOTS
     # ==========================================
     add_styled_heading(doc, "8. User Interface / Application Screenshots", level=1)
-    add_body_p(doc, "The TelcoPulse GenAI platform provides a seamless, production-ready interface across all retention workflows:")
+    add_body_p(doc, "The TelcoPulse GenAI platform provides an enterprise glassmorphic web interface (Live at https://telecomcustomers.streamlit.app/) across all retention modules:")
     
     screens = [
         ("10_genai_copilot_ui.png", "Figure 2: GenAI Customer Retention Copilot Interface & Generated Assets",
-         "Displays the prompt configuration sidebar, subscriber telemetry inputs, and the four generated AI tabs: personalized win-back email, agent call script, concession matrix, and CRM JSON payload."),
+         "Displays the prompt configuration sidebar, subscriber telemetry inputs, Creativity/Temperature slider, and the four generated AI tabs: personalized win-back email, agent call script, concession matrix, and CRM JSON payload."),
         ("01_single_customer_diagnosis.png", "Figure 3: Single Customer Risk Diagnosis & Speedometer Gauge",
          "Presents real-time predictive ML risk scoring (<30% Safe, 30-60% Moderate, >60% Critical), annual financial exposure ($/year), and local log-odds feature attribution waterfall."),
         ("02_what_if_sandbox.png", "Figure 4: What-If Retention Strategy Simulator",
@@ -511,6 +514,7 @@ def generate_retention_campaign(customer_profile, campaign_config):
     add_styled_heading(doc, "9. Challenges and Limitations", level=1)
     
     add_styled_heading(doc, "9.1 Technical Challenges Encountered", level=2)
+    add_bullet_p(doc, "Preventing unescaped currency symbols ($) from colliding with web markdown LaTeX math engines. Resolved by implementing strict dollar-sign escaping (\\$) and double-spaced bullet formatting.", "• Markdown & Currency Math Escaping: ")
     add_bullet_p(doc, "Initial open-ended prompts produced inconsistent discount percentages that occasionally exceeded corporate margin guidelines. Resolved by introducing structured prompt templates with mathematical boundary variables.", "• Prompt Calibration & Hallucination Guardrails: ")
     add_bullet_p(doc, "Seamlessly translating mathematical log-odds coefficients (e.g., +1.28 for Month-to-Month) into natural, customer-centric value propositions without sounding robotic.", "• Harmonizing Predictive ML with Natural Language GenAI: ")
     add_bullet_p(doc, "Ensuring that long-form LLM generation calls do not block the reactive Streamlit UI thread during high-concurrency customer service operations.", "• UI Latency & Real-Time Responsiveness: ")
@@ -525,10 +529,10 @@ def generate_retention_campaign(customer_profile, campaign_config):
     # ==========================================
     add_styled_heading(doc, "10. Conclusion", level=1)
     add_body_p(doc, "The TelcoPulse AI project demonstrates the practical and commercial power of combining Predictive Machine Learning with Generative AI:")
-    add_bullet_p(doc, "A full-featured Generative AI decision support platform was successfully developed, tested, and deployed to Streamlit Community Cloud.", "1. Successfully Developed GenAI Platform: ")
+    add_bullet_p(doc, "A full-featured Generative AI decision support platform was successfully developed, tested, and deployed to Streamlit Community Cloud (https://telecomcustomers.streamlit.app/).", "1. Successfully Developed GenAI Platform: ")
     add_bullet_p(doc, "Generative AI transforms raw probability scores into empathetic, highly customized retention communications, bridging the gap between data science algorithms and human customer care interactions.", "2. Transformative Role of Generative AI: ")
     add_bullet_p(doc, "Frontline agents are equipped with instant, tailored objection scripts and multi-tiered concession playbooks, reducing copywriting effort by 99% while boosting retention likelihood.", "3. Measurable Operational Utility: ")
-    add_bullet_p(doc, "Mastered structured prompt engineering, LLM API integration, UI design with Streamlit, and hybrid AI system architectures.", "4. Key Technical Learnings: ")
+    add_bullet_p(doc, "Mastered structured prompt engineering, stochastic temperature sampling, LLM API integration, UI design with Streamlit, and hybrid AI system architectures.", "4. Key Technical Learnings: ")
 
     # ==========================================
     # 11. FUTURE SCOPE
