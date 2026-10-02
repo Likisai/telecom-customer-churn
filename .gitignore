@@ -1,7 +1,32 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Temporary and Office lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+*.tmp
+*.temp
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Environments and IDEs
+.env
+.venv/
+env/
+venv/
+ENV/
 .vscode/
 .idea/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Log files
 *.log
