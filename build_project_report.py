@@ -377,9 +377,10 @@ def generate_report():
         r2.font.color.rgb = RGBColor(31, 41, 55)
         
     add_info_line(p_box, "Student Name", "Anaganti Sairishikesh")
-    add_info_line(p_box, "College Name", "Engineering & Technology Institute / University")
+    add_info_line(p_box, "Guided by / Mentor", "Raghavendra Rao")
+    add_info_line(p_box, "College Name", "Teegala Krishna Reddy Engineering College")
     add_info_line(p_box, "Department", "Department of Computer Science and Engineering")
-    add_info_line(p_box, "Academic Year", "Final / Pre-Final Year (2025 - 2026)")
+    add_info_line(p_box, "Academic Year", "Final Year (2026 - 2027)")
     add_info_line(p_box, "Project Domain", "Artificial Intelligence & Machine Learning (AI/ML)")
     add_info_line(p_box, "Application Deployment", "https://telecomcustomers.streamlit.app/")
     
@@ -742,6 +743,16 @@ def generate_report():
              ("Global Coefficients", "Visualizes all 41 feature weights learned by the production classifier."),
              ("Threshold Tuning", "Allows operators to adjust decision thresholds based on precision-recall trade-offs."),
              ("Data Audit Metrics", "Verifies zero missing value residuals and normalized distribution stats.")
+         ]),
+        ("14.7 Enterprise Database & Customer CRM Explorer",
+         "06_database_crm_explorer.png",
+         "Figure 8: Enterprise Database & Customer CRM Explorer with SQL Sandbox",
+         "Provides dual-engine relational persistence via MySQL (XAMPP Port 3306) and SQLite with a real-time Analytical SQL Query Sandbox and CRM lifecycle status tracking.",
+         [
+             ("Database Dashboard & KPI Metrics", "Tracks total persisted diagnoses, critical churn exposure count, and average churn probability."),
+             ("Customer Predictions Table", "Searchable, filterable ledger of all assessed accounts with 1-click CSV export."),
+             ("GenAI Campaign Log & Tracker", "Maintains campaign states (Generated -> Dispatched -> Retained -> Churned) and pitch previews."),
+             ("Direct Analytical SQL Sandbox", "Executes real-time SQL queries with execution time logging and instant table visualization.")
          ])
     ]
     

@@ -7,7 +7,7 @@
 
 > 🚀 **Live Interactive Demo:** [https://telecomcustomers.streamlit.app/](https://telecomcustomers.streamlit.app/)
 
-**TelcoPulse AI** is an enterprise-grade AI decision support system designed for telecom customer retention teams. Going beyond basic churn probability predictions, TelcoPulse provides **real-time local risk explainability**, **prescriptive action playbooks**, **interactive "What-If" contract simulations**, and **cohort-level batch prioritization**.
+**TelcoPulse AI** is an enterprise-grade AI decision support system designed for telecom customer retention teams. Going beyond basic churn probability predictions, TelcoPulse provides **real-time local risk explainability**, **prescriptive action playbooks**, **interactive "What-If" contract simulations**, **cohort-level batch prioritization**, **GenAI retention campaign synthesis**, and a **persistent database management layer (MySQL / SQLite)**.
 
 ---
 
@@ -19,24 +19,36 @@
 - **Financial Risk Exposure**: Automatically calculates **Estimated Annual Revenue at Risk ($/yr)**.
 - **Prescriptive Retention Playbook**: Generates targeted business actions (e.g., contract extension incentives, auto-pay discounts, free tech support trials).
 - **1-Click Profile Presets**: Quickly load High Risk, Moderate, or Loyal customer personas.
+- **Persistent Database Save**: Save assessment directly to the persistent database with one click.
 
-### 2. 🎛️ What-If Retention Strategy Simulator
+### 2. ✨ GenAI Customer Retention Copilot
+- Harness Generative AI to generate personalized win-back emails, frontline customer service negotiation scripts, and CRM-ready retention campaigns.
+- Log campaigns and track lifecycle statuses (*Draft*, *Dispatched*, *Retained*, *Churned*).
+
+### 3. 🎛️ What-If Retention Strategy Simulator
 - Interactive sandbox allowing retention specialists to test retention packages (contract extensions, bundling security/support, fee discounts).
 - Live recalculation showing **Absolute Risk Reduction (▼ %)** and **Relative Improvement (+%)** before making an offer to the customer.
 
-### 3. 📁 Batch Cohort Scoring & Prioritized Action Queue
+### 4. 📁 Batch Cohort Scoring & Prioritized Action Queue
 - Upload any customer `.csv` or load a sample cohort.
 - Scores all accounts simultaneously and ranks them by **Expected Annual Loss**.
 - Multi-criteria filtering by Risk Tier and Contract type.
-- 1-click export of prioritized outreach campaign lists (`.csv`).
+- 1-click export of prioritized outreach campaign lists (`.csv`) and bulk database persistence.
 
-### 4. 📊 Executive Cohort Insights & Macro EDA
+### 5. 📊 Executive Cohort Insights & Macro EDA
 - Interactive Plotly visualizations for macro patterns:
   - Churn rates across Contract Types & Payment Methods.
   - Monthly charge density distribution vs churn status.
   - Value-added services (Tech Support, Online Security) impact analysis.
 
-### 5. 🧠 Model Diagnostics & Transparency
+### 6. 🗄️ Database & Customer CRM Explorer (MySQL / SQLite)
+- **Dual Engine Architecture**: Native support for **XAMPP MySQL** (port 3306) with automatic, zero-config **SQLite fallback**.
+- **Customer Predictions Persistence**: Saves individual and batch customer diagnoses with timestamps, probability, risk tier, and feature driver explanations.
+- **GenAI Retention Campaign Tracker**: Logs generated personalized retention copy, concession matrices, promo codes, and lifecycle statuses.
+- **Direct SQL Query Sandbox**: Execute custom analytical queries (`SELECT`, `GROUP BY`, aggregations) with instant DataFrame rendering and CSV export.
+- **1-Click Seeding**: Auto-populate the database directly from the raw telecom dataset with ML scoring.
+
+### 7. 🧠 Model Diagnostics & Transparency
 - Complete visibility into ML pipeline architecture, data scalers, one-hot encoders, and global beta coefficients.
 
 ---
@@ -57,11 +69,27 @@
 
 ---
 
+## 🗄️ Database Configuration (XAMPP MySQL & SQLite)
+
+The platform supports both **XAMPP MySQL** and **SQLite** seamlessly:
+
+1. **Using XAMPP MySQL**:
+   - Open **XAMPP Control Panel** and start the **MySQL** module.
+   - In the Streamlit app, navigate to **"🗄️ Database & CRM Records" -> "⚙️ Connection & Settings"**.
+   - Default credentials (`host: localhost`, `port: 3306`, `user: root`, `password: `).
+   - Click **"Test Connection"** and **"Save Settings"**. The database `telecom_churn` and tables are created automatically!
+
+2. **Using SQLite (Zero-Setup Fallback)**:
+   - If MySQL is not running or if preferred, the app automatically persists data into `telecom_churn.db` locally.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Prerequisites
 - Python 3.10 or higher
 - Git
+- XAMPP (optional, for MySQL)
 
 ### Installation
 
@@ -93,18 +121,9 @@
 
 ---
 
-## 🌐 Deploy as a Live Demo (Streamlit Community Cloud)
-
-You can host this application for free on **Streamlit Community Cloud**:
-1. Push this repository to GitHub.
-2. Sign in to [share.streamlit.io](https://share.streamlit.io/).
-3. Click **"New app"**, select your repository, branch `main`, and main file `app.py`.
-4. Click **Deploy** — your live demo URL will be ready in under a minute!
-
----
-
 ## 🛠️ Tech Stack
 - **Framework**: [Streamlit](https://streamlit.io/)
+- **Database**: [MySQL](https://www.mysql.com/) (via PyMySQL / SQLAlchemy) & [SQLite](https://www.sqlite.org/)
 - **Machine Learning**: [Scikit-Learn](https://scikit-learn.org/), [Joblib](https://joblib.readthedocs.io/)
 - **Data Manipulation**: [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/)
 - **Visualizations**: [Plotly](https://plotly.com/python/)

@@ -30,3 +30,14 @@ ehthumbs.db
 
 # Log files
 *.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Local secrets & credentials
+.gemini_key
+.streamlit/secrets.toml
+
+

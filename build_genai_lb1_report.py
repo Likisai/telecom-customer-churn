@@ -332,10 +332,10 @@ def generate_genai_lb1_report():
         r2.font.color.rgb = RGBColor(31, 41, 55)
         
     add_info_line(p_box, "Submitted by", "Anaganti Sairishikesh")
-    add_info_line(p_box, "College / Institute Name", "Engineering & Technology Institute / University")
+    add_info_line(p_box, "Guided by / Mentor", "Raghavendra Rao")
+    add_info_line(p_box, "College / Institute Name", "Teegala Krishna Reddy Engineering College")
     add_info_line(p_box, "Department", "Department of Computer Science and Engineering")
-    add_info_line(p_box, "Academic Year", "2025 - 2026")
-    add_info_line(p_box, "Guided by", "Faculty Project Mentor / Guide")
+    add_info_line(p_box, "Academic Year", "Final Year (2026 - 2027)")
     add_info_line(p_box, "Project Domain", "Generative Artificial Intelligence (GenAI) & LLMs")
     add_info_line(p_box, "Live Application URL", "https://telecomcustomers.streamlit.app/")
     
@@ -546,7 +546,16 @@ def generate_dynamic_retention_campaign(c_name, c_risk_tier, c_tenure, c_mcharge
     if api_key:
         return call_google_gemini_api(prompt, temperature=temperature)
     return assemble_retention_payload(c_name, final_disc_rate, chosen_hook, ...)"""
-    add_code_block(doc, gen_func_sample, space_after=0)
+    add_code_block(doc, gen_func_sample, space_after=3)
+
+    add_styled_heading(doc, "7.3 Enterprise Database & CRM Persistence Layer (MySQL & SQLite)", level=2, space_before=6, space_after=2)
+    add_body_p(doc, "TelcoPulse AI implements a robust dual database architecture that supports high-throughput relational persistence via MySQL (XAMPP port 3306) with seamless, zero-configuration local SQLite fallback. The database layer automatically initializes schema tables for customer diagnostic records, GenAI retention campaign logs, and batch inference runs.")
+    add_bullet_p(doc, "Stores complete customer telemetry, features, ML churn probabilities, risk tiers, and mathematical feature contributions.", "1. Prediction Records Table (customer_predictions): ")
+    add_bullet_p(doc, "Tracks generated emails, negotiation scripts, concession tiers, promo codes, and CRM campaign lifecycle statuses (Draft -> Dispatched -> Retained -> Churned).", "2. Retention Campaigns Table (retention_campaigns): ")
+    add_bullet_p(doc, "Enables business intelligence and data science teams to execute real-time ad-hoc SQL queries and export results directly within the application.", "3. Analytical SQL Sandbox: ")
+
+    add_styled_heading(doc, "7.4 Live Google Gemini Cloud LLM Integration", level=2, space_before=6, space_after=2)
+    add_body_p(doc, "The system seamlessly interfaces with Google's state-of-the-art Gemini LLM API (gemini-1.5-flash) for live cloud-native generative inference. The application is pre-configured with a default active Gemini API key while providing an editable UI text input, dynamically adapting the copywriting narrative based on real-time subscriber churn drivers, temperature parameters, and target outreach channels.")
 
     doc.add_page_break()
 
@@ -603,6 +612,16 @@ def generate_dynamic_retention_campaign(c_name, c_risk_tier, c_tenure, c_mcharge
              ("Fiber Optic Churn Anomaly", "Identifies high churn in fiber optic subscribers driven by billing friction ($70-$100/mo)."),
              ("Payment Method Insights", "Shows electronic check users churn at 45.3%, 3x higher than automated credit card users."),
              ("Tenure Hazard Curve", "Demonstrates that subscriber defection risk drops dramatically after 12 months of tenure.")
+         ]),
+        ("8.6 Enterprise Database & Customer CRM Explorer",
+         "06_database_crm_explorer.png",
+         "Figure 7: Enterprise Database & Customer CRM Explorer with Live SQL Sandbox",
+         "The Enterprise Database & Customer CRM Explorer provides persistent data storage across MySQL (XAMPP Port 3306) and SQLite. It enables retention managers to query diagnostic histories, update outreach campaign lifecycle states, and execute direct SQL queries.",
+         [
+             ("Database Dashboard & KPI Metrics", "Tracks total persisted diagnoses, critical churn exposure count, and average churn probability."),
+             ("Customer Predictions Table", "Searchable, filterable ledger of all assessed accounts with 1-click CSV export."),
+             ("GenAI Campaign Log & Tracker", "Maintains campaign states (Generated -> Dispatched -> Retained -> Churned) and pitch previews."),
+             ("Direct Analytical SQL Sandbox", "Executes real-time SQL queries with execution time logging and instant table visualization.")
          ])
     ]
     

@@ -6,6 +6,13 @@ import warnings
 import plotly.graph_objects as go
 import plotly.express as px
 import os
+import database
+
+# Initialize database
+try:
+    active_db_engine = database.init_database()
+except Exception:
+    active_db_engine = "sqlite"
 
 warnings.filterwarnings("ignore")
 
@@ -402,15 +409,45 @@ with st.sidebar:
             "🎛️ What-If Retention Sandbox",
             "📁 Batch Scoring & Priority Queue",
             "📊 Executive Cohort Insights",
-            "🧠 Model Diagnostics"
+            "🧠 Model Diagnostics",
+            "🗄️ Database & CRM Records"
         ]
     )
+    
+    # Active Database Status Badge
+    db_cfg = database.load_db_config()
+    db_engine_name = "MySQL (XAMPP)" if active_db_engine == "mysql" else "SQLite (Local DB)"
+    db_badge_color = "#22c55e" if active_db_engine == "mysql" else "#38bdf8"
+    st.markdown(f"""
+    <div style='background: rgba(15, 23, 42, 0.85); padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(99, 102, 241, 0.25); font-size: 0.82rem; margin: 10px 0 16px 0;'>
+        <div style='color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;'>Database Status</div>
+        <div style='color: #f1f5f9; font-weight: 600; display: flex; align-items: center; gap: 6px;'>
+            <span style='color: {db_badge_color}; font-size: 0.9rem;'>●</span> {db_engine_name}
+        </div>
+        <div style='color: #64748b; font-size: 0.72rem; margin-top: 2px;'>DB: <code>{db_cfg.get('database', 'telecom_churn')}</code></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("---")
-    with st.expander("🔑 Live Gemini Cloud API (Optional)", expanded=False):
+    def _get_default_api_key():
+        key_f = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gemini_key")
+        if os.path.exists(key_f):
+            try:
+                with open(key_f, "r", encoding="utf-8") as f:
+                    k = f.read().strip()
+                    if k:
+                        return k
+            except Exception:
+                pass
+        return os.environ.get("GEMINI_API_KEY", "")
+
+    DEFAULT_GEMINI_KEY = _get_default_api_key()
+    with st.expander("🔑 Live Gemini Cloud API", expanded=False):
         user_gemini_key = st.text_input(
             "Gemini API Key",
+            value=DEFAULT_GEMINI_KEY,
             type="password",
-            help="Enter your Google Gemini API Key for 100% live cloud LLM inference. If left empty, our intelligent contextual GenAI synthesis engine generates dynamic assets locally with zero latency!"
+            help="Configured with default Google Gemini API Key. You can edit, replace, or customize this key anytime."
         )
         if user_gemini_key:
             st.success("✅ Live Gemini API Key Configured!")
@@ -559,30 +596,28 @@ def generate_dynamic_retention_campaign(c_name, c_risk_tier, c_tenure, c_contrac
     closing_sign = signatures.get(tone_key, signatures["Empathetic"])
 
     # Live Google Gemini Cloud API Call if key provided
+    is_live_api = False
+    custom_gemini_email = None
     if api_key and len(api_key.strip()) > 15:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key.strip()}"
             prompt_content = f"""
-            You are an elite, highly creative telecom retention copywriter. Draft an exceptional, personalized win-back email, call center script, and concession strategy.
+            You are an elite, highly creative telecom retention copywriter. Draft an exceptional, personalized win-back outreach message for a telecom customer.
             Customer: {c_name}, Tenure: {c_tenure} months, Monthly Bill: ${c_mcharges}, Internet: {c_internet}, Contract: {c_contract}, Risk: {c_risk_tier}.
             Primary Risk Drivers: {', '.join(c_drivers)}.
             Campaign Goal: {c_goal}, Tone: {c_tone}, Target Format: {c_channel}.
+            Special Promo Code: {promo_code}, Discounted Rate: ${new_bill:.2f}/mo (Save ${annual_savings:.2f}/yr).
             Creativity Level: {temperature}.
-            Provide a completely unique, highly persuasive narrative that directly addresses their specific pain points and offers a clear path to renewal.
+            Provide a completely unique, highly persuasive narrative that directly addresses their specific pain points and offers an irresistible incentive to renew.
             """
             resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt_content}]}], "generationConfig": {"temperature": temperature}}, timeout=10)
             if resp.status_code == 200:
-                gemini_text = resp.json()['candidates'][0]['content']['parts'][0]['text']
-                return {
-                    "email_subject": subject_line,
-                    "email_body": gemini_text,
-                    "discount_val": discount_val,
-                    "new_bill": new_bill,
-                    "annual_savings": annual_savings,
-                    "is_live_api": True,
-                    "promo_code": promo_code,
-                    "account_id": account_id
-                }
+                candidates = resp.json().get('candidates', [])
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    if parts:
+                        custom_gemini_email = parts[0].get('text')
+                        is_live_api = True
         except Exception:
             pass
 
@@ -662,7 +697,7 @@ There is no complicated paperwork or service interruption required. Click the se
 
     return {
         "email_subject": subject_line,
-        "email_body": email_body,
+        "email_body": custom_gemini_email if is_live_api and custom_gemini_email else email_body,
         "agent_script": agent_script,
         "concession_df": concession_df,
         "crm_json": json.dumps(crm_json_dict, indent=2),
@@ -670,7 +705,7 @@ There is no complicated paperwork or service interruption required. Click the se
         "new_bill": new_bill,
         "annual_savings": annual_savings,
         "promo_code": promo_code,
-        "is_live_api": False,
+        "is_live_api": is_live_api,
         "account_id": account_id
     }
 
@@ -740,6 +775,12 @@ if menu == "🎯 Single Customer Diagnosis":
         def_mcharges = 105.0
 
     with st.form("customer_diagnosis_form"):
+        col_id1, col_id2 = st.columns([1, 2])
+        with col_id1:
+            diag_cust_id = st.text_input("Customer ID", value="CUST-7482")
+        with col_id2:
+            diag_cust_name = st.text_input("Customer Full Name", value="Alex Morgan")
+            
         st.subheader("1. Customer Demographics & Account Info")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -938,6 +979,51 @@ if menu == "🎯 Single Customer Diagnosis":
             """, unsafe_allow_html=True)
 
 
+    # Database Persistence Operations
+    st.markdown("---")
+    st.subheader("💾 Database Operations")
+    col_db1, col_db2 = st.columns([2.5, 1])
+    with col_db1:
+        st.markdown(f"Save this diagnostic record for **{diag_cust_name}** (`{diag_cust_id}`) into the active database (`{active_db_engine.upper()}`) for historical churn tracking, compliance audits, and CRM queue management.")
+    with col_db2:
+        if st.button("💾 Save Diagnosis to Database", use_container_width=True, type="primary"):
+            risk_label = "Critical Risk" if churn_prob >= 0.60 else ("Moderate Risk" if churn_prob >= 0.35 else "Low Risk")
+            drivers_summary = [f"{row['Feature']} ({'+' if row['Contribution'] > 0 else ''}{row['Contribution']:.2f})" for _, row in feat_contrib_df.head(4).iterrows()]
+            
+            record_data = {
+                "customer_id": diag_cust_id,
+                "customer_name": diag_cust_name,
+                "gender": gender,
+                "senior_citizen": senior_citizen,
+                "partner": partner,
+                "dependents": dependents,
+                "tenure": tenure,
+                "phone_service": phone_service,
+                "multiple_lines": multiple_lines,
+                "internet_service": internet_service,
+                "online_security": online_security,
+                "online_backup": online_backup,
+                "device_protection": device_protection,
+                "tech_support": tech_support,
+                "streaming_tv": streaming_tv,
+                "streaming_movies": streaming_movies,
+                "contract": contract,
+                "paperless_billing": paperless_billing,
+                "payment_method": payment_method,
+                "monthly_charges": monthly_charges,
+                "total_charges": total_charges,
+                "churn_prediction": int(preds[0]),
+                "churn_probability": float(churn_prob),
+                "risk_tier": risk_label,
+                "key_churn_drivers": drivers_summary,
+                "source": "Single Diagnosis"
+            }
+            try:
+                database.save_single_prediction(record_data)
+                st.success(f"✅ Record successfully saved to {active_db_engine.upper()} database for **{diag_cust_name}** (`{diag_cust_id}`)!")
+            except Exception as e:
+                st.error(f"❌ Failed to save record to database: {e}")
+
     # Quick Link to GenAI Copilot
     st.markdown("---")
     st.markdown("""
@@ -1111,6 +1197,40 @@ TASK:
             with tab_out4:
                 st.markdown("### ⚙️ CRM-Ready JSON Dispatch Payload")
                 st.code(ai_output["crm_json"], language="json")
+
+            # Database Persistence for GenAI Campaigns
+            st.markdown("---")
+            st.subheader("💾 Campaign Database Dispatch & Tracking")
+            col_cdb1, col_cdb2 = st.columns([2, 1])
+            with col_cdb1:
+                camp_status_choice = st.selectbox(
+                    "Initial Campaign Lifecycle Status",
+                    ["Generated (Draft)", "Dispatched via CRM", "Agent Outreach In-Progress", "Successfully Retained", "Escalated"],
+                    index=0,
+                    key="genai_camp_status"
+                )
+            with col_cdb2:
+                st.write("")
+                st.write("")
+                if st.button("💾 Save Campaign to Database", use_container_width=True, type="primary", key="btn_save_camp"):
+                    camp_data = {
+                        "customer_id": ai_output.get("account_id", f"CUST-{abs(hash(c_name)) % 10000:04d}"),
+                        "customer_name": c_name,
+                        "risk_tier": c_risk_tier,
+                        "monthly_charges": float(c_mcharges),
+                        "campaign_goal": c_goal,
+                        "outreach_tone": c_tone,
+                        "target_channel": c_channel,
+                        "promo_code": promo_code,
+                        "retention_offer": f"Discount to ${new_bill:.2f}/mo (Save ${annual_savings:.2f}/yr) + Promo: {promo_code}",
+                        "personalized_script": ai_output.get("email_body", "") or ai_output.get("agent_script", ""),
+                        "action_status": camp_status_choice
+                    }
+                    try:
+                        database.save_retention_campaign(camp_data)
+                        st.success(f"✅ Retention Campaign saved to **{active_db_engine.upper()}** database for **{c_name}** (`{promo_code}`)!")
+                    except Exception as e:
+                        st.error(f"❌ Error saving campaign to database: {e}")
 
 
 # ==============================================================================
@@ -1323,15 +1443,28 @@ elif menu == "📁 Batch Scoring & Priority Queue":
             height=350
         )
         
-        # Download Action Plan CSV
-        csv_download = filtered_view.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download Prioritized Outreach Campaign (CSV)",
-            data=csv_download,
-            file_name="telecom_prioritized_churn_leads.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+        # Actions: Download CSV & Save to Database
+        col_act1, col_act2 = st.columns(2)
+        with col_act1:
+            csv_download = filtered_view.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Prioritized Outreach Campaign (CSV)",
+                data=csv_download,
+                file_name="telecom_prioritized_churn_leads.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        with col_act2:
+            if st.button("💾 Save Batch Cohort to Database", use_container_width=True, type="primary"):
+                try:
+                    # Prepare dataframe with Prediction column if missing
+                    df_to_save = filtered_view.copy()
+                    if "Prediction" not in df_to_save.columns:
+                        df_to_save["Prediction"] = (df_to_save["Churn_Probability"] > 0.5).astype(int)
+                    num_saved = database.save_batch_predictions(df_to_save, batch_name=f"Batch Scoring Run ({len(df_to_save)} records)")
+                    st.success(f"✅ Successfully persisted {num_saved} customer records into **{active_db_engine.upper()}** database!")
+                except Exception as e:
+                    st.error(f"❌ Failed to persist batch to database: {e}")
     else:
         st.info("👆 Upload a CSV or click 'Load 250 Sample Records' to preview batch scoring.")
 
@@ -1469,6 +1602,315 @@ elif menu == "🧠 Model Diagnostics":
         st.subheader("Top Global Retention Anchors")
         top_neg = coef_df[coef_df["Coefficient"] < 0].sort_values(by="Coefficient", ascending=True).head(5)
         st.table(top_neg[["Feature", "Coefficient"]])
+
+
+# ==============================================================================
+# TAB 7: 🗄️ Database & CRM Records
+# ==============================================================================
+elif menu == "🗄️ Database & CRM Records":
+    st.markdown("""
+    <div class="hero-banner">
+        <div class="hero-title">🗄️ Enterprise Database & Customer CRM Explorer</div>
+        <div class="hero-subtitle">Unified persistent data layer supporting MySQL (XAMPP) and SQLite. Inspect diagnostic history, manage GenAI retention campaign dispatches, and execute custom analytical SQL queries.</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    db_tab1, db_tab2, db_tab3, db_tab4, db_tab5 = st.tabs([
+        "📊 Database Dashboard",
+        "👥 Customer Predictions Explorer",
+        "🎯 GenAI Campaign Log",
+        "⚡ Direct SQL Sandbox",
+        "⚙️ Connection & Settings"
+    ])
+
+    # -----------------------------
+    # TAB 1: Database Dashboard
+    # -----------------------------
+    with db_tab1:
+        st.markdown("### 📈 Stored Customer & Retention Metrics")
+        stats = database.get_db_summary_stats()
+        
+        kpi_db1, kpi_db2, kpi_db3, kpi_db4 = st.columns(4)
+        with kpi_db1:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Total Persisted Diagnoses</div>
+                <div class='metric-value' style='color: #a5b4fc;'>{stats['total_predictions']:,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with kpi_db2:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Critical Risk Customers</div>
+                <div class='metric-value' style='color: #ef4444;'>{stats['critical_risk_count']:,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with kpi_db3:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Active Retention Campaigns</div>
+                <div class='metric-value' style='color: #38bdf8;'>{stats['campaigns_count']:,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with kpi_db4:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Database Avg Churn Risk</div>
+                <div class='metric-value' style='color: #f59e0b;'>{stats['avg_churn_rate']*100:.1f}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        df_all = database.get_predictions_df(limit=500)
+        
+        if not df_all.empty:
+            col_ch1, col_ch2 = st.columns(2)
+            with col_ch1:
+                st.subheader("Risk Tier Distribution")
+                if "risk_tier" in df_all.columns:
+                    risk_counts = df_all["risk_tier"].value_counts().reset_index()
+                    risk_counts.columns = ["Risk Tier", "Count"]
+                    fig_pie = px.pie(
+                        risk_counts,
+                        names="Risk Tier",
+                        values="Count",
+                        hole=0.45,
+                        color="Risk Tier",
+                        color_discrete_map={
+                            "Critical Risk": "#ef4444",
+                            "🔴 Critical": "#ef4444",
+                            "Moderate Risk": "#eab308",
+                            "🟡 Moderate": "#eab308",
+                            "Low Risk": "#22c55e",
+                            "🟢 Low Risk": "#22c55e"
+                        }
+                    )
+                    fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', font=dict(color="#f8fafc"))
+                    st.plotly_chart(fig_pie, use_container_width=True)
+            with col_ch2:
+                st.subheader("Contract Type vs Average Monthly Charges")
+                if "contract" in df_all.columns and "monthly_charges" in df_all.columns:
+                    df_chart_data = df_all.copy()
+                    df_chart_data["monthly_charges"] = pd.to_numeric(df_chart_data["monthly_charges"], errors="coerce").fillna(0.0)
+                    df_contract = df_chart_data.groupby("contract", as_index=False)["monthly_charges"].mean()
+                    fig_bar = px.bar(
+                        df_contract,
+                        x="contract",
+                        y="monthly_charges",
+                        color="contract",
+                        color_discrete_sequence=["#6366f1", "#38bdf8", "#ec4899"],
+                        labels={"monthly_charges": "Avg Monthly Charges ($)", "contract": "Contract Type"}
+                    )
+                    fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color="#f8fafc"))
+                    st.plotly_chart(fig_bar, use_container_width=True)
+        else:
+            st.info("💡 No diagnostic records found in database yet. Run single diagnosis, batch scoring, or click **'Seed Database'** in the Settings tab to populate sample data!")
+
+    # -----------------------------
+    # TAB 2: Customer Predictions Explorer
+    # -----------------------------
+    with db_tab2:
+        st.markdown("### 📋 Persisted Customer Diagnosis Records")
+        col_flt1, col_flt2, col_flt3 = st.columns([1.5, 2, 1])
+        with col_flt1:
+            risk_sel = st.selectbox("Filter Risk Tier", ["All", "Critical", "Moderate", "Low"], index=0)
+        with col_flt2:
+            search_query = st.text_input("🔍 Search Customer ID or Name", placeholder="e.g. CUST-7482 or Alex")
+        with col_flt3:
+            rec_limit = st.selectbox("Max Records", [50, 100, 200, 500], index=1)
+
+        filter_arg = None if risk_sel == "All" else risk_sel
+        preds_df = database.get_predictions_df(limit=rec_limit, risk_filter=filter_arg)
+
+        if not preds_df.empty:
+            if search_query.strip():
+                q = search_query.strip().lower()
+                preds_df = preds_df[
+                    preds_df["customer_id"].astype(str).str.lower().str.contains(q) |
+                    preds_df["customer_name"].astype(str).str.lower().str.contains(q)
+                ]
+
+            st.dataframe(preds_df, use_container_width=True, height=400)
+            
+            # Action bar: Download & Delete
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                csv_data = preds_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    "📥 Export Filtered Records (CSV)",
+                    data=csv_data,
+                    file_name="telecom_customer_predictions_export.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            with col_d2:
+                del_id = st.number_input("Delete Record by ID", min_value=1, step=1, key="del_rec_id")
+                if st.button("🗑️ Delete Record", use_container_width=True):
+                    database.delete_prediction_record(int(del_id))
+                    st.success(f"Record #{del_id} deleted successfully!")
+                    st.rerun()
+        else:
+            st.warning("No records matched your search criteria.")
+
+    # -----------------------------
+    # TAB 3: GenAI Campaign Log
+    # -----------------------------
+    with db_tab3:
+        st.markdown("### 🎯 GenAI Retention Campaign Dispatch Tracker")
+        camps_df = database.get_campaigns_df(limit=100)
+        
+        if not camps_df.empty:
+            st.dataframe(
+                camps_df[["id", "customer_id", "customer_name", "risk_tier", "promo_code", "campaign_goal", "target_channel", "action_status", "created_at"]],
+                use_container_width=True,
+                height=300
+            )
+
+            st.markdown("---")
+            st.subheader("Update Campaign Lifecycle Status")
+            col_up1, col_up2, col_up3 = st.columns([1, 1.5, 1])
+            with col_up1:
+                selected_cid = st.selectbox("Select Campaign ID", camps_df["id"].tolist())
+            with col_up2:
+                new_status_val = st.selectbox(
+                    "New Status",
+                    ["Generated (Draft)", "Dispatched via CRM", "Agent Outreach In-Progress", "Successfully Retained", "Customer Churned", "Escalated to Executive"]
+                )
+            with col_up3:
+                st.write("")
+                st.write("")
+                if st.button("🔄 Update Status", use_container_width=True):
+                    database.update_campaign_status(selected_cid, new_status_val)
+                    st.success(f"Campaign #{selected_cid} updated to **{new_status_val}**!")
+                    st.rerun()
+
+            with st.expander("📖 View Campaign Script & Pitch Copy", expanded=False):
+                matched = camps_df[camps_df["id"] == selected_cid]
+                if not matched.empty:
+                    st.markdown(f"**Customer:** {matched.iloc[0]['customer_name']} (`{matched.iloc[0]['customer_id']}`)")
+                    st.markdown(f"**Promo Code:** `{matched.iloc[0]['promo_code']}`")
+                    st.markdown(f"**Offer:** {matched.iloc[0]['retention_offer']}")
+                    st.markdown("**Generated Pitch / Copy:**")
+                    st.info(matched.iloc[0]['personalized_script'])
+        else:
+            st.info("💡 No retention campaigns generated yet. Use the **GenAI Retention Copilot** tab and click 'Save Campaign to Database' to log campaigns!")
+
+    # -----------------------------
+    # TAB 4: Direct SQL Sandbox
+    # -----------------------------
+    with db_tab4:
+        st.markdown("### ⚡ Live Analytical SQL Query Sandbox")
+        st.caption("Directly query the active database to run custom cohort aggregations, ROI metrics, and retention audit analysis.")
+        
+        sample_queries = {
+            "Top 10 Highest Risk Customers": "SELECT customer_id, customer_name, risk_tier, churn_probability, monthly_charges, contract FROM customer_predictions ORDER BY churn_probability DESC LIMIT 10;",
+            "Risk Tier Aggregation & Avg Charges": "SELECT risk_tier, COUNT(*) as customer_count, ROUND(AVG(monthly_charges), 2) as avg_monthly_charges, ROUND(AVG(churn_probability)*100, 1) as avg_churn_pct FROM customer_predictions GROUP BY risk_tier;",
+            "Payment Method Risk Analysis": "SELECT payment_method, COUNT(*) as total_users, ROUND(AVG(churn_probability)*100, 1) as avg_churn_risk_pct FROM customer_predictions GROUP BY payment_method ORDER BY avg_churn_risk_pct DESC;",
+            "Recent GenAI Retention Campaigns": "SELECT id, customer_id, customer_name, promo_code, action_status, created_at FROM retention_campaigns ORDER BY id DESC LIMIT 15;"
+        }
+        
+        q_choice = st.selectbox("💡 Load Pre-built SQL Template", ["-- Select a template --"] + list(sample_queries.keys()))
+        default_query_text = sample_queries[q_choice] if q_choice in sample_queries else "SELECT * FROM customer_predictions LIMIT 10;"
+        
+        user_sql = st.text_area("SQL Statement", value=default_query_text, height=110)
+        
+        if st.button("🚀 Execute SQL Query", type="primary", use_container_width=True):
+            import time
+            start_t = time.time()
+            success, res_df, engine_used = database.execute_custom_query(user_sql)
+            elapsed = (time.time() - start_t) * 1000
+            
+            if success:
+                st.success(f"✅ Query executed on **{engine_used.upper()}** in {elapsed:.1f}ms ({len(res_df)} rows returned)")
+                st.dataframe(res_df, use_container_width=True)
+                
+                # Download query results
+                csv_query = res_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    "📥 Export Query Results (CSV)",
+                    data=csv_query,
+                    file_name="sql_query_result.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.error(f"❌ SQL Execution Error: {res_df}")
+
+    # -----------------------------
+    # TAB 5: Connection & Settings
+    # -----------------------------
+    with db_tab5:
+        st.markdown("### ⚙️ Database Configuration & Credentials")
+        current_cfg = database.load_db_config()
+        
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown("#### Primary Database Settings (XAMPP MySQL)")
+            db_engine_choice = st.radio("Database Engine", ["mysql", "sqlite"], index=0 if current_cfg.get("engine") == "mysql" else 1, horizontal=True)
+            db_host = st.text_input("Host", value=current_cfg.get("host", "localhost"))
+            db_port = st.number_input("Port", value=int(current_cfg.get("port", 3306)), step=1)
+            db_user = st.text_input("Username", value=current_cfg.get("user", "root"))
+            db_password = st.text_input("Password", value=current_cfg.get("password", ""), type="password", help="Default XAMPP MySQL has no password (empty). If you configured a password in phpMyAdmin, enter it here.")
+            db_name = st.text_input("Database Name", value=current_cfg.get("database", "telecom_churn"))
+            db_fallback = st.checkbox("Enable automatic SQLite fallback if MySQL is unreachable", value=current_cfg.get("use_fallback", True))
+            
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("🔌 Test Connection", use_container_width=True):
+                    test_cfg = {
+                        "engine": db_engine_choice,
+                        "host": db_host,
+                        "port": int(db_port),
+                        "user": db_user,
+                        "password": db_password,
+                        "database": db_name,
+                        "use_fallback": db_fallback
+                    }
+                    ok, msg, eng = database.test_db_connection(test_cfg)
+                    if ok:
+                        st.success(f"✅ {msg}")
+                    else:
+                        st.error(f"❌ {msg}")
+            with col_btn2:
+                if st.button("💾 Save Settings", use_container_width=True, type="primary"):
+                    new_cfg = {
+                        "engine": db_engine_choice,
+                        "host": db_host,
+                        "port": int(db_port),
+                        "user": db_user,
+                        "password": db_password,
+                        "database": db_name,
+                        "use_fallback": db_fallback
+                    }
+                    database.save_db_config(new_cfg)
+                    st.success("✅ Database configuration saved!")
+                    st.rerun()
+
+        with col_c2:
+            st.markdown("#### Database Utilities & Initial Seeding")
+            st.markdown("""
+            Populate the database with initial customer records from the raw dataset (`dataset/WA_Fn-UseC_-Telco-Customer-Churn.csv`) with automatic AI risk scoring.
+            """)
+            
+            seed_count = st.slider("Number of records to seed", min_value=10, max_value=200, value=50, step=10)
+            if st.button(f"📥 Seed Database with {seed_count} Telecom Records", use_container_width=True):
+                with st.spinner(f"Seeding {seed_count} customer records into database..."):
+                    try:
+                        seeded = database.seed_demo_data(predict_fn=preprocess_and_predict, limit=seed_count)
+                        st.success(f"✅ Successfully seeded {seeded} customer records into **{active_db_engine.upper()}** database!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Seeding error: {e}")
+                        
+            st.markdown("---")
+            st.markdown("#### Database Info")
+            st.markdown(f"""
+            - **Active Engine**: `{active_db_engine.upper()}`
+            - **Local SQLite Path**: `{database.SQLITE_DB_PATH}`
+            - **Config File**: `{database.CONFIG_FILE}`
+            - **Supported Operations**: Single Prediction Save, Batch Insertion, GenAI Campaign Logging, Custom SQL Queries
+            """)
+
 
 # Sleek Global Footer
 st.markdown("""
